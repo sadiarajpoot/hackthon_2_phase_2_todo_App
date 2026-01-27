@@ -155,6 +155,55 @@ cd frontend
 npm test
 ```
 
+## Deployment
+
+### Frontend Deployment (Vercel)
+
+To deploy the frontend to Vercel:
+
+1. Navigate to the frontend directory:
+   ```bash
+   cd frontend
+   ```
+
+2. Install Vercel CLI:
+   ```bash
+   npm install -g vercel
+   ```
+
+3. Deploy to Vercel:
+   ```bash
+   vercel --prod
+   ```
+
+### Backend Deployment
+
+The backend needs to be deployed to a Python-compatible platform like Render, Railway, or Heroku:
+
+#### Option 1: Deploy to Render
+
+1. Create a new Web Service on Render
+2. Connect your GitHub repository
+3. Set the runtime to Python
+4. Set the build command to: `pip install -r requirements.txt`
+5. Set the start command to: `uvicorn src.main:app --host 0.0.0.0 --port $PORT`
+
+#### Option 2: Deploy to Railway
+
+1. Create a new project on Railway
+2. Connect your GitHub repository
+3. Set the deploy directory to `backend`
+4. Add the environment variables from your `.env` file
+
+### Environment Variables
+
+When deploying, make sure to set the following environment variables:
+
+- `DATABASE_URL`: Your Neon PostgreSQL connection string
+- `JWT_SECRET`: Secure secret for JWT tokens
+- `NEXTAUTH_SECRET`: Secret for NextAuth
+- `NEXT_PUBLIC_API_URL`: URL of your deployed backend API
+
 ## Development
 
 This project follows a spec-driven development approach. All features are specified in the `/specs` directory before implementation.
