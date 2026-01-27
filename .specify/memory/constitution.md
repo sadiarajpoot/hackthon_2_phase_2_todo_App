@@ -1,55 +1,45 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+SYNC IMPACT REPORT
+Version change: N/A → 1.0.0 (Initial version)
+Modified principles: N/A (New constitution)
+Added sections: All sections (Initial constitution)
+Removed sections: N/A
+Templates requiring updates:
+- ✅ .specify/templates/plan-template.md (Constitution Check section will align)
+- ✅ .specify/templates/spec-template.md (Requirements section aligned)
+- ✅ .specify/templates/tasks-template.md (Task categorization reflects principles)
+Templates: All checked and aligned with new principles
+Follow-up TODOs: None
+-->
+# Hackathon II: Todo Full-Stack Web Application (Phase II) Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### Spec-driven development using Spec-Kit Plus and Claude Code
+All development follows spec-driven approach using Spec-Kit Plus and Claude Code; Every feature must have clear specifications before implementation; Adherence to defined architecture and implementation patterns
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### Security-first approach with user isolation and JWT authentication
+All features must implement security from the ground up; User data isolation is mandatory; JWT authentication required for all endpoints; Zero tolerance for security vulnerabilities
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### Scalability through serverless technologies and modern frameworks
+Leverage serverless technologies for automatic scaling; Use modern frameworks for optimal performance; Design for horizontal scaling and resource efficiency
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### Maintainability with organized monorepo structure and clear documentation
+Maintain organized monorepo structure with clear separation of concerns; All code must be well-documented with clear comments; Follow consistent coding standards across the codebase
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### Full-stack integration with Next.js and FastAPI
+Frontend built with Next.js 16+ using App Router; Backend built with FastAPI for API endpoints; SQLModel for database interactions with Neon PostgreSQL
 
-### [PRINCIPLE_6_NAME]
+### Quality assurance with comprehensive testing
+Unit tests for all API endpoints; Integration tests for authentication flows; End-to-end testing for task CRUD operations; Test coverage metrics maintained
 
+## Technology Stack and Standards
+Next.js 16+ (App Router), FastAPI, SQLModel, Neon Serverless PostgreSQL, Better Auth; TypeScript with Tailwind for frontend; Python with Pydantic for backend; All features must reference specs in /specs/ directory
 
-[PRINCIPLE__DESCRIPTION]
-
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
-
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
-
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
-
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+## Development Workflow
+Monorepo setup with docker-compose for development; Spec-driven development using Spec-Kit Plus; All changes require unit and integration tests; Documentation updated for every change
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
+All features must implement 5 basic CRUD operations plus authentication; Code format follows frontend (TypeScript with Tailwind) and backend (Python with Pydantic) conventions; Zero critical bugs in auth or data handling; Successful end-to-end testing required
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
-
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2026-01-05 | **Last Amended**: 2026-01-05
