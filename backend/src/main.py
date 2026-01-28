@@ -42,7 +42,7 @@ def create_app():
     # Add CORS middleware
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["https://hackthon-phase-2-updated.vercel.app"],  # In production, replace with specific origins
+        allow_origins=["*"],  # In production, replace with specific origins
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
