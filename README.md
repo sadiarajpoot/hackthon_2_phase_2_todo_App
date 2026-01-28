@@ -71,7 +71,7 @@ docker-compose up --build
 ```
 
 The application will be available at:
-- Frontend: https://hackthon-phase-2-updated.vercel.app/
+- Frontend: https://hackthon-2-phase-2-todo-app.vercel.app/
 - Backend API: https://sadiakhan123-todo-phase-2.hf.space
 - Backend API Docs: https://sadiakhan123-todo-phase-2.hf.space/docs
 
