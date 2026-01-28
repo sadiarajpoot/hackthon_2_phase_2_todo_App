@@ -1,6 +1,6 @@
 // API service for the Todo application
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://sadiakhan123-todo-phase-2.hf.space';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 class ApiService {
   constructor() {
@@ -65,22 +65,48 @@ class ApiService {
 
   // Authentication methods
   async register(userData) {
-    return this.request('/api/auth/register', {
+    const response = await this.request('/api/auth/register', {
       method: 'POST',
       body: JSON.stringify(userData),
     });
+
+    // After successful registration, user ID might be in the response
+    if (response && response.id) {
+      localStorage.setItem('user_id', response.id);
+    }
+
+    return response;
   }
 
   async login(credentials) {
-    return this.request('/api/auth/login', {
+    const response = await this.request('/api/auth/login', {
       method: 'POST',
       body: JSON.stringify(credentials),
     });
+
+    // Get user profile to retrieve user ID
+    if (response && response.access_token) {
+      // Store the token first
+      localStorage.setItem('access_token', response.access_token);
+
+      try {
+        // Get user profile to retrieve user ID
+        const profile = await this.getProfile();
+        if (profile && profile.id) {
+          localStorage.setItem('user_id', profile.id);
+        }
+      } catch (error) {
+        console.error('Error fetching user profile after login:', error);
+      }
+    }
+
+    return response;
   }
 
   async logout() {
-    // Remove token from localStorage
+    // Remove token and user ID from localStorage
     localStorage.removeItem('access_token');
+    localStorage.removeItem('user_id');
     // In a real JWT implementation, we might call a logout endpoint
     // but for stateless JWT, removing the token is sufficient
     return { message: 'Successfully logged out' };
@@ -92,35 +118,65 @@ class ApiService {
 
   // Task methods
   async getTasks() {
-    return this.request('/api/tasks');
+    // Get user ID from localStorage or however it's stored
+    const userId = localStorage.getItem('user_id'); // Assuming user ID is stored after login
+    if (!userId) {
+      throw new Error('User ID not found. Please log in again.');
+    }
+    return this.request(`/api/${userId}/tasks`);
   }
 
   async createTask(taskData) {
-    return this.request('/api/tasks', {
+    // Get user ID from localStorage or however it's stored
+    const userId = localStorage.getItem('user_id'); // Assuming user ID is stored after login
+    if (!userId) {
+      throw new Error('User ID not found. Please log in again.');
+    }
+    return this.request(`/api/${userId}/tasks`, {
       method: 'POST',
       body: JSON.stringify(taskData),
     });
   }
 
   async getTask(taskId) {
-    return this.request(`/api/tasks/${taskId}`);
+    // Get user ID from localStorage or however it's stored
+    const userId = localStorage.getItem('user_id'); // Assuming user ID is stored after login
+    if (!userId) {
+      throw new Error('User ID not found. Please log in again.');
+    }
+    return this.request(`/api/${userId}/tasks/${taskId}`);
   }
 
   async updateTask(taskId, taskData) {
-    return this.request(`/api/tasks/${taskId}`, {
+    // Get user ID from localStorage or however it's stored
+    const userId = localStorage.getItem('user_id'); // Assuming user ID is stored after login
+    if (!userId) {
+      throw new Error('User ID not found. Please log in again.');
+    }
+    return this.request(`/api/${userId}/tasks/${taskId}`, {
       method: 'PUT',
       body: JSON.stringify(taskData),
     });
   }
 
   async toggleTaskCompletion(taskId) {
-    return this.request(`/api/tasks/${taskId}/toggle`, {
+    // Get user ID from localStorage or however it's stored
+    const userId = localStorage.getItem('user_id'); // Assuming user ID is stored after login
+    if (!userId) {
+      throw new Error('User ID not found. Please log in again.');
+    }
+    return this.request(`/api/${userId}/tasks/${taskId}/complete`, {
       method: 'PATCH',
     });
   }
 
   async deleteTask(taskId) {
-    return this.request(`/api/tasks/${taskId}`, {
+    // Get user ID from localStorage or however it's stored
+    const userId = localStorage.getItem('user_id'); // Assuming user ID is stored after login
+    if (!userId) {
+      throw new Error('User ID not found. Please log in again.');
+    }
+    return this.request(`/api/${userId}/tasks/${taskId}`, {
       method: 'DELETE',
     });
   }

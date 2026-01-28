@@ -44,7 +44,7 @@ def create_app():
     # Add CORS middleware
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["https://hackthon-2-phase-2-todo-app.vercel.app"],  # In production, replace with specific origins
+        allow_origins=["https://hackthon-2-phase-2-todo-app.vercel.app", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"],  # Allow local development origins
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -52,7 +52,7 @@ def create_app():
 
     # Include routers
     app.include_router(auth_router, prefix="/api/auth", tags=["Authentication"])
-    app.include_router(task_router, prefix="/api/tasks", tags=["Tasks"])
+    app.include_router(task_router, prefix="/api", tags=["Tasks"])
 
     @app.get("/")
     def read_root():

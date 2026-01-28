@@ -15,11 +15,37 @@ logger = get_logger(__name__)
 task_router = APIRouter()
 
 
-@task_router.get("/", response_model=List[TaskResponse])
+@task_router.get("/{user_id}/tasks", response_model=List[TaskResponse])
 async def get_tasks(
+    user_id: str,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_session)
 ) -> Any:
+    """
+    Get all tasks for the specified user (must be the authenticated user)
+    """
+    try:
+        # Verify that the requested user_id matches the authenticated user
+        if str(current_user.id) != user_id:
+            raise raise_http_exception(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to access this user's tasks"
+            )
+
+        logger.info(f"Getting tasks for user: {current_user.email}")
+        tasks = await TaskService.get_tasks_by_user(user_id, db)
+        logger.info(f"Retrieved {len(tasks)} tasks for user: {current_user.email}")
+        return tasks
+
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error getting tasks for user {current_user.email}: {e}")
+        raise_http_exception(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error getting tasks"
+        )
     """
     Get all tasks for the authenticated user
     """
@@ -42,20 +68,28 @@ async def get_tasks(
         )
 
 
-@task_router.post("/", response_model=TaskResponse)
+@task_router.post("/{user_id}/tasks", response_model=TaskResponse)
 async def create_task(
+    user_id: str,
     task_data: TaskCreate,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_session)
 ) -> Any:
     """
-    Create a new task for the authenticated user
+    Create a new task for the specified user (must be the authenticated user)
     """
     try:
+        # Verify that the requested user_id matches the authenticated user
+        if str(current_user.id) != user_id:
+            raise raise_http_exception(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to create tasks for this user"
+            )
+
         logger.info(f"Creating task for user: {current_user.email}")
 
         # Create the task
-        task_response = await TaskService.create_task(task_data, str(current_user.id), db)
+        task_response = await TaskService.create_task(task_data, user_id, db)
 
         logger.info(f"Task created successfully for user {current_user.email}: {task_response.title}")
         return task_response
@@ -71,20 +105,28 @@ async def create_task(
         )
 
 
-@task_router.get("/{task_id}", response_model=TaskResponse)
+@task_router.get("/{user_id}/tasks/{task_id}", response_model=TaskResponse)
 async def get_task(
+    user_id: str,
     task_id: UUID,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_session)
 ) -> Any:
     """
-    Get a specific task by ID for the authenticated user
+    Get a specific task by ID for the specified user (must be the authenticated user)
     """
     try:
+        # Verify that the requested user_id matches the authenticated user
+        if str(current_user.id) != user_id:
+            raise raise_http_exception(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to access this user's tasks"
+            )
+
         logger.info(f"Getting task {task_id} for user: {current_user.email}")
 
         # Get the task
-        task = await TaskService.get_task_by_id(str(task_id), str(current_user.id), db)
+        task = await TaskService.get_task_by_id(str(task_id), user_id, db)
 
         if not task:
             logger.warning(f"Task {task_id} not found for user: {current_user.email}")
@@ -95,7 +137,7 @@ async def get_task(
 
         logger.info(f"Task retrieved successfully for user {current_user.email}: {task.title}")
         return TaskResponse(
-            id=str(task.id),
+            id=str(task_id),
             title=task.title,
             description=task.description,
             is_completed=task.is_completed,
@@ -116,21 +158,29 @@ async def get_task(
         )
 
 
-@task_router.put("/{task_id}", response_model=TaskResponse)
+@task_router.put("/{user_id}/tasks/{task_id}", response_model=TaskResponse)
 async def update_task(
+    user_id: str,
     task_id: UUID,
     task_data: TaskUpdate,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_session)
 ) -> Any:
     """
-    Update a specific task for the authenticated user
+    Update a specific task for the specified user (must be the authenticated user)
     """
     try:
+        # Verify that the requested user_id matches the authenticated user
+        if str(current_user.id) != user_id:
+            raise raise_http_exception(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to update this user's tasks"
+            )
+
         logger.info(f"Updating task {task_id} for user: {current_user.email}")
 
         # Update the task
-        updated_task = await TaskService.update_task(str(task_id), task_data, str(current_user.id), db)
+        updated_task = await TaskService.update_task(str(task_id), task_data, user_id, db)
 
         if not updated_task:
             logger.warning(f"Task {task_id} not found for user: {current_user.email}")
@@ -153,20 +203,28 @@ async def update_task(
         )
 
 
-@task_router.patch("/{task_id}/toggle", response_model=TaskToggleResponse)
+@task_router.patch("/{user_id}/tasks/{task_id}/complete", response_model=TaskToggleResponse)
 async def toggle_task_completion(
+    user_id: str,
     task_id: UUID,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_session)
 ) -> Any:
     """
-    Toggle completion status of a task for the authenticated user
+    Toggle completion status of a task for the specified user (must be the authenticated user)
     """
     try:
+        # Verify that the requested user_id matches the authenticated user
+        if str(current_user.id) != user_id:
+            raise raise_http_exception(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to modify this user's tasks"
+            )
+
         logger.info(f"Toggling task completion for {task_id} for user: {current_user.email}")
 
         # Toggle the task completion
-        toggled_task = await TaskService.toggle_task_completion(str(task_id), str(current_user.id), db)
+        toggled_task = await TaskService.toggle_task_completion(str(task_id), user_id, db)
 
         if not toggled_task:
             logger.warning(f"Task {task_id} not found for user: {current_user.email}")
@@ -194,20 +252,28 @@ async def toggle_task_completion(
         )
 
 
-@task_router.delete("/{task_id}")
+@task_router.delete("/{user_id}/tasks/{task_id}")
 async def delete_task(
+    user_id: str,
     task_id: UUID,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_session)
 ) -> Any:
     """
-    Delete a specific task for the authenticated user
+    Delete a specific task for the specified user (must be the authenticated user)
     """
     try:
+        # Verify that the requested user_id matches the authenticated user
+        if str(current_user.id) != user_id:
+            raise raise_http_exception(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to delete this user's tasks"
+            )
+
         logger.info(f"Deleting task {task_id} for user: {current_user.email}")
 
         # Delete the task
-        success = await TaskService.delete_task(str(task_id), str(current_user.id), db)
+        success = await TaskService.delete_task(str(task_id), user_id, db)
 
         if not success:
             logger.warning(f"Task {task_id} not found for user: {current_user.email}")

@@ -57,7 +57,19 @@
       "Bash(git push -u origin 001-backend-fastapi)",
       "Bash(git add frontend/vercel.json README.md)",
       "Bash(git commit -m \"docs: Add Vercel deployment configuration and instructions\n\n- Add vercel.json for proper frontend deployment\n- Update README with deployment instructions for both frontend and backend\n- Explain proper separation of concerns for full-stack deployment\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\")",
-      "Bash(python -m uvicorn src.main:app --host 0.0.0.0 --port 8002)"
+      "Bash(python -m uvicorn src.main:app --host 0.0.0.0 --port 8002)",
+      "Bash(python -c \"from src.main import app; import uvicorn; uvicorn.run\\(app, host=''0.0.0.0'', port=8002\\)\")",
+      "Bash(cmd /c \"tasklist | findstr python\")",
+      "Bash(cmd /c \"taskkill /PID 7516 /F && taskkill /PID 8436 /F && taskkill /PID 16252 /F\")",
+      "Bash(netstat -ano)",
+      "Bash(findstr :3000)",
+      "Bash(PORT=3001 npm run dev:*)",
+      "Bash(powershell -Command \"Stop-Process -Id 4572,7600,11716,8480,11396 -Force -ErrorAction SilentlyContinue\")",
+      "Bash(uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload)",
+      "Bash(python -c \"from src.main import app; import uvicorn; uvicorn.run\\(app, host=''0.0.0.0'', port=8000, lifespan=''off''\\)\")",
+      "Bash(tasklist)",
+      "Bash(findstr python)",
+      "Bash(findstr :8000)"
     ]
   }
 }
