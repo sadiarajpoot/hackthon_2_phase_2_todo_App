@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     nextauth_secret: Optional[str] = None
     api_host: Optional[str] = "0.0.0.0"
     api_port: Optional[str] = "8000"
-    next_public_api_url: Optional[str] = "http://localhost:8000"
+    next_public_api_url: Optional[str] = "https://sadiakhan123-todo-phase-2.hf.space"
     db_echo: bool = False  # Set to True to see SQL queries in logs
 
     class Config:

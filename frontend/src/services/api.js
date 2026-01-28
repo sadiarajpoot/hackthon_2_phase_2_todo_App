@@ -1,6 +1,6 @@
 // API service for the Todo application
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://sadiakhan123-hackthon-2-phase-2.hf.space';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://sadiakhan123-todo-phase-2.hf.space';
 
 class ApiService {
   constructor() {
