@@ -9,6 +9,7 @@ from .models.task import Task
 from .utils.logging import get_logger
 from sqlmodel import SQLModel
 from .config import settings
+from sqlalchemy import text
 
 
 logger = get_logger(__name__)
@@ -60,6 +61,18 @@ def create_app():
     @app.get("/health")
     def health_check():
         return {"status": "healthy", "message": "API is running"}
+
+    @app.get("/db-health")
+    def db_health_check():
+        """Check database connection health"""
+        try:
+            from .database import engine
+            with engine.connect() as connection:
+                # Test the connection
+                result = connection.execute(text("SELECT 1"))
+                return {"status": "healthy", "message": "Database connection is working"}
+        except Exception as e:
+            return {"status": "unhealthy", "message": f"Database connection failed: {str(e)}"}
 
     return app
 
