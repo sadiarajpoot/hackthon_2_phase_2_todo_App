@@ -71,9 +71,9 @@ docker-compose up --build
 ```
 
 The application will be available at:
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:8000
-- Backend API Docs: http://localhost:8000/docs
+- Frontend: https://hackthon-phase-2-updated.vercel.app/
+- Backend API: https://sadiakhan123-hackthon-2-phase-2.hf.space
+- Backend API Docs: https://sadiakhan123-hackthon-2-phase-2.hf.space/docs
 
 #### Option 2: Local Development
 
