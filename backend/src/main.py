@@ -36,7 +36,8 @@ def create_app():
         title="Todo Full-Stack Web Application API",
         description="API for the Todo Full-Stack Web Application with JWT authentication and user data isolation",
         version="1.0.0",
-        lifespan=lifespan
+        lifespan=lifespan,
+        redirect_slashes=False
     )
 
     # Add CORS middleware

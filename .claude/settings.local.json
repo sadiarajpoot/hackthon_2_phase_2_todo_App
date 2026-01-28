@@ -56,7 +56,8 @@
       "Bash(git commit -m \"feat: Complete full-stack todo application with Neon PostgreSQL integration\n\n- Integrated Neon PostgreSQL database with backend API\n- Fixed database schema issues and table structure\n- Updated frontend with production build\n- Added authentication and task management features\n- Configured environment variables for Neon database connection\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\")",
       "Bash(git push -u origin 001-backend-fastapi)",
       "Bash(git add frontend/vercel.json README.md)",
-      "Bash(git commit -m \"docs: Add Vercel deployment configuration and instructions\n\n- Add vercel.json for proper frontend deployment\n- Update README with deployment instructions for both frontend and backend\n- Explain proper separation of concerns for full-stack deployment\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\")"
+      "Bash(git commit -m \"docs: Add Vercel deployment configuration and instructions\n\n- Add vercel.json for proper frontend deployment\n- Update README with deployment instructions for both frontend and backend\n- Explain proper separation of concerns for full-stack deployment\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\")",
+      "Bash(python -m uvicorn src.main:app --host 0.0.0.0 --port 8002)"
     ]
   }
 }
