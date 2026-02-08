@@ -1,0 +1,296 @@
+openapi: 3.0.3
+info:
+  title: Chat API for Todo AI Chatbot
+  description: API for interacting with the AI chatbot to manage todo tasks via natural language
+  version: 1.0.0
+servers:
+  - url: http://localhost:8000
+    description: Development server
+  - url: https://api.example.com
+    description: Production server
+paths:
+  /api/{user_id}/chat:
+    post:
+      summary: Send a message to the AI chatbot
+      description: Process a natural language command and return the AI response
+      operationId: sendMessage
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: The ID of the user sending the message
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - message
+              properties:
+                conversation_id:
+                  type: string
+                  format: uuid
+                  description: The ID of the conversation (null for new conversation)
+                  example: "123e4567-e89b-12d3-a456-426614174000"
+                message:
+                  type: string
+                  description: The user's message/command in natural language
+                  example: "Add a task to buy groceries"
+      responses:
+        '200':
+          description: Successful response from the AI chatbot
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - conversation_id
+                  - response
+                  - tool_calls
+                properties:
+                  conversation_id:
+                    type: string
+                    format: uuid
+                    description: The ID of the conversation
+                  response:
+                    type: string
+                    description: The AI's response to the user
+                    example: "I've created a task 'buy groceries' for you."
+                  tool_calls:
+                    type: array
+                    description: List of MCP tool calls made during processing
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          description: The name of the tool called
+                          example: "add_task"
+                        arguments:
+                          type: object
+                          description: The arguments passed to the tool
+                        result:
+                          type: object
+                          description: The result from the tool call
+        '400':
+          description: Bad request - invalid input or malformed request
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - error
+                properties:
+                  error:
+                    type: string
+                    description: Error message explaining the issue
+        '401':
+          description: Unauthorized - invalid or missing authentication
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - error
+                properties:
+                  error:
+                    type: string
+                    description: Error message indicating authentication failure
+        '403':
+          description: Forbidden - user does not have permission to access this resource
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - error
+                properties:
+                  error:
+                    type: string
+                    description: Error message indicating permission issue
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - error
+                properties:
+                  error:
+                    type: string
+                    description: Error message describing the internal error
+      security:
+        - bearerAuth: []
+  /api/{user_id}/conversations:
+    get:
+      summary: Get all conversations for a user
+      description: Retrieve a list of all conversations for the specified user
+      operationId: getUserConversations
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: The ID of the user whose conversations to retrieve
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          required: false
+          description: Maximum number of conversations to return
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: offset
+          in: query
+          required: false
+          description: Number of conversations to skip
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: List of conversations for the user
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - conversations
+                  - total_count
+                properties:
+                  conversations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Conversation'
+                  total_count:
+                    type: integer
+                    description: Total number of conversations available
+        '401':
+          description: Unauthorized - invalid or missing authentication
+        '403':
+          description: Forbidden - user does not have permission to access this resource
+        '500':
+          description: Internal server error
+      security:
+        - bearerAuth: []
+  /api/{user_id}/conversations/{conversation_id}:
+    get:
+      summary: Get a specific conversation with its messages
+      description: Retrieve a conversation and all its associated messages
+      operationId: getConversationWithMessages
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: The ID of the user who owns the conversation
+          schema:
+            type: string
+            format: uuid
+        - name: conversation_id
+          in: path
+          required: true
+          description: The ID of the conversation to retrieve
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: The conversation with its messages
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - conversation
+                  - messages
+                properties:
+                  conversation:
+                    $ref: '#/components/schemas/Conversation'
+                  messages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Message'
+        '401':
+          description: Unauthorized - invalid or missing authentication
+        '403':
+          description: Forbidden - user does not have permission to access this resource
+        '404':
+          description: Conversation not found
+        '500':
+          description: Internal server error
+      security:
+        - bearerAuth: []
+
+components:
+  schemas:
+    Conversation:
+      type: object
+      required:
+        - id
+        - user_id
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the conversation
+        user_id:
+          type: string
+          format: uuid
+          description: ID of the user who owns this conversation
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp when the conversation was created
+        updated_at:
+          type: string
+          format: date-time
+          description: Timestamp when the conversation was last updated
+    Message:
+      type: object
+      required:
+        - id
+        - conversation_id
+        - role
+        - content
+        - timestamp
+        - sequence_number
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the message
+        conversation_id:
+          type: string
+          format: uuid
+          description: ID of the conversation this message belongs to
+        role:
+          type: string
+          enum: [user, assistant, system]
+          description: Role of the message sender
+        content:
+          type: string
+          description: Content of the message
+        timestamp:
+          type: string
+          format: date-time
+          description: Timestamp when the message was created
+        sequence_number:
+          type: integer
+          description: Sequence number of the message in the conversation
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token for authentication

@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from .api.auth_router import auth_router
 from .api.task_router import task_router
+from .api.chat import router as chat_router
 from .database import engine
 from .models.user import User
 from .models.task import Task
@@ -53,6 +54,7 @@ def create_app():
     # Include routers
     app.include_router(auth_router, prefix="/api/auth", tags=["Authentication"])
     app.include_router(task_router, prefix="/api", tags=["Tasks"])
+    app.include_router(chat_router, tags=["Chat"])
 
     @app.get("/")
     def read_root():
@@ -85,5 +87,5 @@ if __name__ == "__main__":
         "main:app",
         host="0.0.0.0",
         port=8000,
-        reload=True if settings.db_echo else False
+        reload=True  # Enable hot reload for development
     )

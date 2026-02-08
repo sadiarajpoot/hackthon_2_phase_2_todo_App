@@ -10,8 +10,11 @@ class Settings(BaseSettings):
     nextauth_secret: Optional[str] = None
     api_host: Optional[str] = "0.0.0.0"
     api_port: Optional[str] = "8000"
-    next_public_api_url: Optional[str] = "http://localhost:8000"
+    next_public_api_url: Optional[str] = "https://sadiakhan123-hackthon-2-phase-2.hf.space"
     db_echo: bool = False  # Set to True to see SQL queries in logs
+    cohere_api_key: str  # Cohere API key for AI agent
+    debug: bool = True  # Enable/disable debug mode
+    log_level: str = "INFO"  # Logging level
 
     class Config:
         env_file = ".env"

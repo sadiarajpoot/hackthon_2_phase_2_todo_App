@@ -1,0 +1,221 @@
+openapi: 3.0.3
+info:
+  title: MCP Tools API for AI Chatbot
+  description: API specification for MCP (Model Context Protocol) tools that enable AI agents to manage user tasks
+  version: 1.0.0
+servers:
+  - url: http://localhost:8001
+    description: Development MCP server
+  - url: https://mcp.example.com
+    description: Production MCP server
+paths: {}
+# Note: MCP tools don't typically expose traditional REST endpoints
+# The OpenAPI specification is included for documentation purposes
+# Actual MCP communication happens through the MCP protocol
+components:
+  schemas:
+    AddTaskRequest:
+      type: object
+      required:
+        - user_id
+        - title
+      properties:
+        user_id:
+          type: string
+          description: The ID of the user creating the task
+          example: "user-123"
+        title:
+          type: string
+          description: The title of the task to create
+          example: "Buy groceries"
+        description:
+          type: string
+          description: Optional description of the task
+          example: "Milk, eggs, bread"
+    AddTaskResponse:
+      type: object
+      required:
+        - task_id
+        - status
+        - title
+      properties:
+        task_id:
+          type: string
+          description: The ID of the created task
+          example: "task-456"
+        status:
+          type: string
+          description: The status of the operation
+          example: "created"
+        title:
+          type: string
+          description: The title of the created task
+          example: "Buy groceries"
+    ListTasksRequest:
+      type: object
+      required:
+        - user_id
+      properties:
+        user_id:
+          type: string
+          description: The ID of the user whose tasks to retrieve
+          example: "user-123"
+        status:
+          type: string
+          description: Optional filter for task status
+          enum: [all, pending, completed]
+          example: "pending"
+    ListTasksResponse:
+      type: object
+      required:
+        - tasks
+      properties:
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+    CompleteTaskRequest:
+      type: object
+      required:
+        - user_id
+        - task_id
+      properties:
+        user_id:
+          type: string
+          description: The ID of the user owning the task
+          example: "user-123"
+        task_id:
+          type: string
+          description: The ID of the task to complete
+          example: "task-456"
+    CompleteTaskResponse:
+      type: object
+      required:
+        - task_id
+        - status
+        - title
+      properties:
+        task_id:
+          type: string
+          description: The ID of the completed task
+          example: "task-456"
+        status:
+          type: string
+          description: The status of the operation
+          example: "completed"
+        title:
+          type: string
+          description: The title of the completed task
+          example: "Buy groceries"
+    DeleteTaskRequest:
+      type: object
+      required:
+        - user_id
+        - task_id
+      properties:
+        user_id:
+          type: string
+          description: The ID of the user owning the task
+          example: "user-123"
+        task_id:
+          type: string
+          description: The ID of the task to delete
+          example: "task-456"
+    DeleteTaskResponse:
+      type: object
+      required:
+        - task_id
+        - status
+        - title
+      properties:
+        task_id:
+          type: string
+          description: The ID of the deleted task
+          example: "task-456"
+        status:
+          type: string
+          description: The status of the operation
+          example: "deleted"
+        title:
+          type: string
+          description: The title of the deleted task
+          example: "Buy groceries"
+    UpdateTaskRequest:
+      type: object
+      required:
+        - user_id
+        - task_id
+      properties:
+        user_id:
+          type: string
+          description: The ID of the user owning the task
+          example: "user-123"
+        task_id:
+          type: string
+          description: The ID of the task to update
+          example: "task-456"
+        title:
+          type: string
+          description: Optional new title for the task
+          example: "Buy weekly groceries"
+        description:
+          type: string
+          description: Optional new description for the task
+          example: "Milk, eggs, bread, fruits"
+    UpdateTaskResponse:
+      type: object
+      required:
+        - task_id
+        - status
+        - title
+      properties:
+        task_id:
+          type: string
+          description: The ID of the updated task
+          example: "task-456"
+        status:
+          type: string
+          description: The status of the operation
+          example: "updated"
+        title:
+          type: string
+          description: The updated title of the task
+          example: "Buy weekly groceries"
+    Task:
+      type: object
+      required:
+        - id
+        - user_id
+        - title
+        - status
+        - created_at
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the task
+          example: "task-456"
+        user_id:
+          type: string
+          description: ID of the user who owns this task
+          example: "user-123"
+        title:
+          type: string
+          description: Title of the task
+          example: "Buy groceries"
+        description:
+          type: string
+          description: Optional description of the task
+          example: "Milk, eggs, bread"
+        status:
+          type: string
+          description: Status of the task
+          enum: [pending, completed]
+          example: "pending"
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp when the task was created
+        updated_at:
+          type: string
+          format: date-time
+          description: Timestamp when the task was last updated

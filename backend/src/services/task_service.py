@@ -1,230 +1,202 @@
-from sqlmodel import Session, select
+"""
+Task Service for handling task-related operations.
+Manages task creation, retrieval, updates, and deletions for the chat API and MCP tools.
+"""
 from typing import List, Optional
+from sqlmodel import Session, select
 from uuid import UUID
-from ..models.task import Task
-from ..models.user import User
-from ..schemas.task import TaskCreate, TaskUpdate, TaskResponse
-from ..utils.logging import get_logger
-from ..utils.responses import raise_http_exception, not_found_exception
-from fastapi import HTTPException, status
-
-logger = get_logger(__name__)
+import uuid
+from datetime import datetime
+from ..models.task import Task as TaskModel, TaskStatus
 
 
 class TaskService:
-    @staticmethod
-    async def create_task(task_data: TaskCreate, user_id: str, db_session: Session) -> TaskResponse:
-        """Create a new task for a user"""
-        try:
-            # Create new task
-            db_task = Task(
-                title=task_data.title,
-                description=task_data.description,
-                is_completed=task_data.is_completed,
-                due_date=task_data.due_date,
-                user_id=UUID(user_id)  # Convert string to UUID
-            )
+    """
+    Service class for managing tasks in the database.
+    Handles creation, retrieval, updates, and deletions of task records.
+    """
 
-            db_session.add(db_task)
-            db_session.commit()
-            db_session.refresh(db_task)
+    def __init__(self, db_session: Session):
+        self.db_session = db_session
 
-            logger.info(f"Task created successfully for user {user_id}: {db_task.title}")
+    def create_task(self, task: TaskModel) -> TaskModel:
+        """
+        Create a new task.
 
-            return TaskResponse(
-                id=str(db_task.id),
-                title=db_task.title,
-                description=db_task.description,
-                is_completed=db_task.is_completed,
-                user_id=str(db_task.user_id),
-                created_at=db_task.created_at,
-                updated_at=db_task.updated_at,
-                due_date=db_task.due_date
-            )
+        Args:
+            task: Task object to create with title, description, user_id, and initial status
 
-        except HTTPException:
-            # Re-raise HTTP exceptions
-            raise
-        except Exception as e:
-            logger.error(f"Error creating task: {e}")
-            raise_http_exception(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Internal server error during task creation"
-            )
+        Returns:
+            Created Task object with ID assigned
+        """
+        # Ensure the task has a unique ID
+        if not task.id:
+            task.id = uuid.uuid4()
 
-    @staticmethod
-    async def get_task_by_id(task_id: str, user_id: str, db_session: Session) -> Optional[Task]:
-        """Get a specific task by ID for a user"""
-        try:
-            task = db_session.exec(
-                select(Task).where(Task.id == task_id, Task.user_id == UUID(user_id))
-            ).first()
+        # Set default status if not provided
+        if not hasattr(task, 'status') or task.status is None:
+            task.status = TaskStatus.pending
 
-            if not task:
-                logger.warning(f"Task not found for user {user_id} with id {task_id}")
-                return None
+        self.db_session.add(task)
+        self.db_session.commit()
+        self.db_session.refresh(task)
+        return task
 
-            logger.info(f"Task retrieved successfully for user {user_id}: {task.title}")
-            return task
+    def get_task_by_id(self, task_id: UUID) -> Optional[TaskModel]:
+        """
+        Get a task by its ID.
 
-        except Exception as e:
-            logger.error(f"Error retrieving task {task_id} for user {user_id}: {e}")
+        Args:
+            task_id: ID of the task to retrieve
+
+        Returns:
+            Task object if found, None otherwise
+        """
+        statement = select(TaskModel).where(TaskModel.id == task_id)
+        result = self.db_session.exec(statement)
+        return result.first()
+
+    def get_task_by_id_and_user(self, task_id: UUID, user_id: UUID) -> Optional[TaskModel]:
+        """
+        Get a task by its ID and user ID (for authorization).
+
+        Args:
+            task_id: ID of the task to retrieve
+            user_id: ID of the user who owns the task
+
+        Returns:
+            Task object if found and owned by user, None otherwise
+        """
+        statement = select(TaskModel).where(
+            TaskModel.id == task_id,
+            TaskModel.user_id == user_id
+        )
+        result = self.db_session.exec(statement)
+        return result.first()
+
+    def get_tasks_by_user_id(self, user_id: UUID) -> List[TaskModel]:
+        """
+        Get all tasks for a specific user.
+
+        Args:
+            user_id: ID of the user whose tasks to retrieve
+
+        Returns:
+            List of Task objects belonging to the user
+        """
+        statement = select(TaskModel).where(TaskModel.user_id == user_id)
+        result = self.db_session.exec(statement)
+        return result.all()
+
+    def get_tasks_by_user_id_and_status(self, user_id: UUID, status: str) -> List[TaskModel]:
+        """
+        Get all tasks for a user with a specific completion status.
+
+        Args:
+            user_id: ID of the user whose tasks to retrieve
+            status: Status to filter by ('completed', 'pending', etc.)
+
+        Returns:
+            List of Task objects with the specified status
+        """
+        from ..models.task import TaskStatus
+        # Convert string status to enum if needed
+        status_enum = TaskStatus(status) if status in ["pending", "completed"] else TaskStatus.pending
+
+        statement = select(TaskModel).where(
+            TaskModel.user_id == user_id,
+            TaskModel.status == status_enum
+        )
+        result = self.db_session.exec(statement)
+        return result.all()
+
+    def update_task(self, task_id: UUID, update_data: dict) -> Optional[TaskModel]:
+        """
+        Update a task with new data.
+
+        Args:
+            task_id: ID of the task to update
+            update_data: Dictionary of fields to update
+
+        Returns:
+            Updated Task object if successful, None if task not found
+        """
+        task = self.get_task_by_id(task_id)
+        if not task:
             return None
 
-    @staticmethod
-    async def check_task_ownership(task_id: str, user_id: str, db_session: Session) -> bool:
-        """Check if a user owns a specific task"""
-        try:
-            task = db_session.exec(
-                select(Task).where(Task.id == task_id, Task.user_id == UUID(user_id))
-            ).first()
-
-            is_owner = task is not None
-            if not is_owner:
-                logger.warning(f"User {user_id} attempted to access task {task_id} they don't own")
-
-            return is_owner
-
-        except Exception as e:
-            logger.error(f"Error checking task ownership for task {task_id} and user {user_id}: {e}")
-            return False
-
-    @staticmethod
-    async def get_tasks_by_user(user_id: str, db_session: Session) -> List[TaskResponse]:
-        """Get all tasks for a user"""
-        try:
-            tasks = db_session.exec(
-                select(Task).where(Task.user_id == UUID(user_id))
-            ).all()
-
-            logger.info(f"Retrieved {len(tasks)} tasks for user {user_id}")
-            return [
-                TaskResponse(
-                    id=str(task.id),
-                    title=task.title,
-                    description=task.description,
-                    is_completed=task.is_completed,
-                    user_id=str(task.user_id),
-                    created_at=task.created_at,
-                    updated_at=task.updated_at,
-                    due_date=task.due_date
-                ) for task in tasks
-            ]
-
-        except Exception as e:
-            logger.error(f"Error retrieving tasks for user {user_id}: {e}")
-            raise_http_exception(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Internal server error during task retrieval"
-            )
-
-    @staticmethod
-    async def update_task(task_id: str, task_data: TaskUpdate, user_id: str, db_session: Session) -> Optional[TaskResponse]:
-        """Update a specific task for a user"""
-        try:
-            # Get the existing task
-            task = db_session.exec(
-                select(Task).where(Task.id == task_id, Task.user_id == UUID(user_id))
-            ).first()
-
-            if not task:
-                logger.warning(f"Task not found for user {user_id} with id {task_id}")
-                return None
-
-            # Update task fields
-            update_data = task_data.dict(exclude_unset=True)
-            for field, value in update_data.items():
+        # Update task fields with provided data
+        for field, value in update_data.items():
+            if hasattr(task, field):
                 setattr(task, field, value)
 
-            db_session.add(task)
-            db_session.commit()
-            db_session.refresh(task)
+        # Update the timestamp
+        task.updated_at = datetime.utcnow()
 
-            logger.info(f"Task updated successfully for user {user_id}: {task.title}")
+        self.db_session.add(task)
+        self.db_session.commit()
+        self.db_session.refresh(task)
+        return task
 
-            return TaskResponse(
-                id=str(task.id),
-                title=task.title,
-                description=task.description,
-                is_completed=task.is_completed,
-                user_id=str(task.user_id),
-                created_at=task.created_at,
-                updated_at=task.updated_at,
-                due_date=task.due_date
-            )
+    def delete_task(self, task_id: UUID) -> bool:
+        """
+        Delete a task.
 
-        except HTTPException:
-            # Re-raise HTTP exceptions
-            raise
-        except Exception as e:
-            logger.error(f"Error updating task {task_id} for user {user_id}: {e}")
-            raise_http_exception(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Internal server error during task update"
-            )
+        Args:
+            task_id: ID of the task to delete
 
-    @staticmethod
-    async def delete_task(task_id: str, user_id: str, db_session: Session) -> bool:
-        """Delete a specific task for a user"""
-        try:
-            # Get the existing task
-            task = db_session.exec(
-                select(Task).where(Task.id == task_id, Task.user_id == UUID(user_id))
-            ).first()
+        Returns:
+            True if deletion was successful, False if task not found
+        """
+        task = self.get_task_by_id(task_id)
+        if not task:
+            return False
 
-            if not task:
-                logger.warning(f"Task not found for user {user_id} with id {task_id}")
-                return False
+        self.db_session.delete(task)
+        self.db_session.commit()
+        return True
 
-            db_session.delete(task)
-            db_session.commit()
+    def complete_task(self, task_id: UUID) -> Optional[TaskModel]:
+        """
+        Mark a task as completed.
 
-            logger.info(f"Task deleted successfully for user {user_id}: {task.title}")
+        Args:
+            task_id: ID of the task to mark as completed
 
-            return True
+        Returns:
+            Updated Task object if successful, None if task not found
+        """
+        return self.update_task(task_id, {"status": TaskStatus.completed})
 
-        except Exception as e:
-            logger.error(f"Error deleting task {task_id} for user {user_id}: {e}")
-            raise_http_exception(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Internal server error during task deletion"
-            )
+    def toggle_task_completion(self, task_id: UUID) -> Optional[TaskModel]:
+        """
+        Toggle the completion status of a task.
 
-    @staticmethod
-    async def toggle_task_completion(task_id: str, user_id: str, db_session: Session) -> Optional[TaskResponse]:
-        """Toggle the completion status of a task"""
-        try:
-            # Get the existing task
-            task = db_session.exec(
-                select(Task).where(Task.id == task_id, Task.user_id == UUID(user_id))
-            ).first()
+        Args:
+            task_id: ID of the task to toggle
 
-            if not task:
-                logger.warning(f"Task not found for user {user_id} with id {task_id}")
-                return None
+        Returns:
+            Updated Task object if successful, None if task not found
+        """
+        task = self.get_task_by_id(task_id)
+        if not task:
+            return None
 
-            # Toggle completion status
-            task.is_completed = not task.is_completed
-            db_session.add(task)
-            db_session.commit()
-            db_session.refresh(task)
+        # Toggle the status
+        new_status = TaskStatus.completed if task.status != TaskStatus.completed else TaskStatus.pending
+        return self.update_task(task_id, {"status": new_status})
 
-            logger.info(f"Task completion toggled for user {user_id}: {task.title} (now {task.is_completed})")
+    def count_tasks_by_user(self, user_id: UUID) -> int:
+        """
+        Count the number of tasks for a user.
 
-            return TaskResponse(
-                id=str(task.id),
-                title=task.title,
-                description=task.description,
-                is_completed=task.is_completed,
-                user_id=str(task.user_id),
-                created_at=task.created_at,
-                updated_at=task.updated_at,
-                due_date=task.due_date
-            )
+        Args:
+            user_id: ID of the user whose tasks to count
 
-        except Exception as e:
-            logger.error(f"Error toggling task completion {task_id} for user {user_id}: {e}")
-            raise_http_exception(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Internal server error during task toggle"
-            )
+        Returns:
+            Number of tasks belonging to the user
+        """
+        statement = select(TaskModel).where(TaskModel.user_id == user_id)
+        result = self.db_session.exec(statement)
+        tasks = result.all()
+        return len(tasks)
